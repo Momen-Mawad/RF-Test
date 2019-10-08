@@ -18,7 +18,7 @@ names(obs_list) <- satellite_station$station
 
 #Expanding satellite_station to mach obs number of observations (obs comes in the next step)
 satellite_station_expanded <- tibble(
-  satelite = "obs",
+  satellite = "obs",
   station = rep(satellite_station$station, each = 32)
 )
 
@@ -45,7 +45,7 @@ names(arc2_list) <- satellite_station$station
 
 #Expanding satellite_station to mach arc2 number of observations (arc2 comes in the next step)
 satellite_station_expanded <- tibble(
-  satelite = "arc2",
+  satellite = "arc2",
   station = rep(satellite_station$station, each = 32)
 )
 
@@ -72,7 +72,7 @@ names(chirps_list) <- satellite_station$station
 
 #Expanding satellite_station to mach chirps number of observations (chirps comes in the next step)
 satellite_station_expanded <- tibble(
-  satelite = "chirps",
+  satellite = "chirps",
   station = rep(satellite_station$station, each = 32)
 )
 
@@ -99,7 +99,7 @@ names(mswep_list) <- satellite_station$station
 
 #Expanding satellite_station to mach mswep number of observations (mswep comes in the next step)
 satellite_station_expanded <- tibble(
-  satelite = "mswep",
+  satellite = "mswep",
   station = rep(satellite_station$station, each = 32)
 )
 
@@ -126,7 +126,7 @@ names(persiann_list) <- satellite_station$station
 
 #Expanding satellite_station to mach persiann number of observations (persiann comes in the next step)
 satellite_station_expanded <- tibble(
-  satelite = "persiann",
+  satellite = "persiann",
   station = rep(satellite_station$station, each = 32)
 )
 
@@ -153,7 +153,7 @@ names(tamsat_list) <- satellite_station$station
 
 #Expanding satellite_station to mach tamsat number of observations (tamsat comes in the next step)
 satellite_station_expanded <- tibble(
-  satelite = "tamsat",
+  satellite = "tamsat",
   station = rep(satellite_station$station, each = 32)
 )
 
@@ -163,14 +163,23 @@ tamsat <- bind_rows(tamsat_list) %>%
 
 remove(satellite_station, satellite_station_expanded, tamsat_list_names, tamsat_list)
 
-#--------------------------------import climatic zones files
-climatic_zones <- read_csv("Climatic Zones.csv")
-climatic_zones
-#-------------------------------------------------------------------Combine all in one tibble
 
-df <- bind_rows(obs, arc2, chirps, mswep, persiann, tamsat) %>%
-
-  left_join(climatic_zones) #There is a problem here
+dt <- bind_rows(obs, arc2, chirps, mswep, persiann, tamsat)
 
 #---------------------------------------------------------------------ggplot2
+#Comparing satellites data with observed
 
+plotting = function(x) {
+ggplot(NULL, aes(`Max daily (mm)`, fill = satellite)) +
+  geom_histogram(data = obs, alpha = 0.5, color = "blue") +
+  geom_histogram(data = x) +
+    xlim(0,350) +
+    ylim(0,300)
+}
+
+plotting(arc2)
+plotting(chirps)
+plotting(mswep)
+plotting(persiann)
+plotting(tamsat)
+#------------------------------------------------------------------------------
