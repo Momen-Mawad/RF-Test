@@ -167,19 +167,24 @@ remove(satellite_station, satellite_station_expanded, tamsat_list_names, tamsat_
 dt <- bind_rows(obs, arc2, chirps, mswep, persiann, tamsat)
 
 #---------------------------------------------------------------------ggplot2
-#Comparing satellites data with observed
-
-plotting = function(x) {
-ggplot(NULL, aes(`Max daily (mm)`, fill = satellite)) +
-  geom_histogram(data = obs, alpha = 0.5, color = "blue") +
-  geom_histogram(data = x) +
-    xlim(0,350) +
-    ylim(0,300)
+#creating function for regression lines graph
+plot_rl = function(x) {
+ggplot(obs) +
+  geom_smooth(aes(`Max daily (mm)`, x$`Max daily (mm)`), method = "lm") +
+  xlab ("obs") +
+  ylab("x") #????? 
 }
+plot_rl(arc2)
+plot_rl(chirps)
+plot_rl(mswep)
+plot_rl(persiann)
+plot_rl(tamsat)
 
-plotting(arc2)
-plotting(chirps)
-plotting(mswep)
-plotting(persiann)
-plotting(tamsat)
+#Histogram graphs
+
+ggplot(dt, aes(x = `Max daily (mm)`)) +
+  geom_histogram(aes(fill = satellite))  +
+  #geom_histogram(data = filter(dt, satellite == "obs"), aes(x = `Max daily (mm)`)) +
+  facet_wrap(~satellite, nrow = 2, ncol = 3)  
+
 #------------------------------------------------------------------------------
