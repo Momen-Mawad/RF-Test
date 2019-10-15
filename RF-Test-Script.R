@@ -14,25 +14,31 @@ df <- import_file(satellite) %>%
   separate(file, c("satellite","station1"), sep = "/") %>%
   separate(col = station1, into = c("station", NA), sep = "\\.")
 
-#---------------------------------------------------------------------ggplot2
-#creating function for regression lines graph
-plot_rl = function(x) {
-ggplot(obs) +
-  geom_smooth(aes(`Max daily (mm)`, x$`Max daily (mm)`), method = "lm") +
-  xlab ("obs") +
-  ylab("x") #????? 
-}
-plot_rl(arc2)
-plot_rl(chirps)
-plot_rl(mswep)
-plot_rl(persiann)
-plot_rl(tamsat)
+  
+# Plots -------------------------------------------------------------------
+
+obs <- df %>% filter(satellite == "obs")
+arc2 <- df %>% filter(satellite == "arc2")
+chirps <- df %>% filter(satellite == "chirps")
 
 #Histogram graphs
 
-ggplot(dt, aes(x = `Max daily (mm)`)) +
-  geom_histogram(aes(fill = satellite))  +
-  #geom_histogram(data = filter(dt, satellite == "obs"), aes(x = `Max daily (mm)`)) +
-  facet_wrap(~satellite, nrow = 2, ncol = 3)  
+plot_histogram <- function(index) {
+  ggplot(df) +
+  geom_histogram(aes(x = index, fill = satellite)) +
+    facet_wrap(~satellite, nrow = 2, ncol = 3)
+    #xlab() ------------------
+}
 
-#------------------------------------------------------------------------------
+plot_histogram (df$`Max daily (mm)`)
+
+plot_histogram (df$`RD>30`)
+
+plot_histogram (df$`P99 daily (mm)`)
+
+plot_histogram (df$`RD>P99`)
+
+
+# Model quality table -----------------------------------------------------
+
+
