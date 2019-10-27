@@ -1,5 +1,6 @@
 library(tidyverse)
 library(hydroGOF)
+library(shiny)
 
 # Import satellite --------------------------------------------
 
@@ -15,7 +16,8 @@ df <- import_file(all_satellite) %>%
   separate(file, c("satellite","station1"), sep = "/") %>%
   separate(col = station1, into = c("station", NA), sep = "\\.")
 
-# General plots -----------------------------------------------------------
+
+# Important variables -----------------------------------------------------
 
 obs <- df %>% filter(satellite == "obs")
 arc2 <- df %>% filter(satellite == "arc2")
@@ -25,28 +27,59 @@ persiann <- df %>% filter(satellite == "persiann")
 tamsat <- df %>% filter(satellite == "tamsat")
 
 
-plot_histogram <- function(index) {
-  ggplot(df) +
-  geom_histogram(aes(x = index, fill = satellite)) +
-    facet_wrap(~satellite, nrow = 2, ncol = 3)
-    #xlab() ------------------
-}
-
-plot_histogram (df$`Max daily (mm)`)
-
-plot_histogram (df$`RD>30`)
-
-plot_histogram (df$`P99 daily (mm)`)
-
-plot_histogram (df$`RD>P99`)
-
-# Metrics table -----------------------------------------------------
-
 rainfall_indices <- c("Max daily (mm)", "RD>30", "P99 daily (mm)")
 
 performance_matrix <- c("nse", "rmse", "mae", "mbe", "rsquare", "y_intercept", "slope")
 
 all_stations <- df %>% distinct(station) %>% pull(station)
+
+climate_zone <- read_csv("Climatic Zones.csv") %>% 
+  arrange(stations) %>% mutate(all_stations) %>% 
+  select(all_stations, climate_zone = `Climate Zone`)
+
+all_zones <- climate_zone %>% distinct(climate_zone) %>% pull(climate_zone)
+
+# General plots -----------------------------------------------------------
+
+df_compare <- bind_rows(arc2, chirps, mswep, persiann, tamsat) %>% 
+  bind_cols(as_tibble(rbind(obs, obs[1:1024, ], obs[1:1024, ], obs[1:1024, ],
+                            obs[1:1024, ])))
+
+df_hist_ploting <- function(m) {
+  ggplot(df_compare) +
+    geom_histogram(aes_string(x = paste("`", m, "`", sep = "")
+                              , fill = "satellite")) +
+    geom_histogram(aes_string(x = paste("`", m, 1, "`", sep = "")),
+                   fill = "blue", alpha = 0.2) +
+    facet_wrap(~satellite)
+}
+
+df_hist_ploting(rainfall_indices[1])
+df_hist_ploting(rainfall_indices[2])
+df_hist_ploting(rainfall_indices[3])
+
+
+# Correlation: climatic zone vs rainfall index ----------------------------
+
+df_compare <- df_compare %>% 
+  left_join(climate_zone, by = c("station" = "all_stations"))
+
+df_corr_ploting <- function(k) {
+  ggplot(df_compare) +
+    geom_smooth(aes_string(x = paste("`", k, "`", sep = ""),
+                           y = paste("`", k, 1, "`", sep = "")),
+                na.rm = T, method = lm, se = F) +
+    facet_grid(satellite~climate_zone) +
+    labs(x = "Ground Stations", y = "Satellite Products", 
+         title = paste("Correlation between STEs and ground stations for", k))
+  }
+
+max(df_compare$"`Max daily (mm)`")
+
+df_corr_ploting(rainfall_indices[1])
+df_corr_ploting(rainfall_indices[2])
+df_corr_ploting(rainfall_indices[3])
+# Metrics table -----------------------------------------------------
 
 evaluate_satellite <- function(satellite_name) {
   evaluate_index <- function(index_name) {
@@ -146,12 +179,6 @@ scores_station <- map(1:32,ranking_station) %>% reshape::melt() %>% select(value
   select(stations, satellite, scores_station)
 
 # Scores per climatic zones -----------------------------------------------
-
-climate_zone <- read_csv("Climatic Zones.csv") %>% 
-  arrange(stations) %>% mutate(all_stations) %>% 
-  select(all_stations, climate_zone = `Climate Zone`)
-
-all_zones <- climate_zone %>% distinct(climate_zone) %>% pull(climate_zone)
 
 scores_station <- scores_station %>% 
   left_join(climate_zone, by = c("stations" = "all_stations")) %>% 

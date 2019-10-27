@@ -1,0 +1,12 @@
+name: rf-test
+title:
+username:
+account: momen
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1384244
+bundleId: 2540082
+url: https://momen.shinyapps.io/rf-test/
+when: 1572157534.0354
+asMultiple: FALSE
+asStatic: FALSE
